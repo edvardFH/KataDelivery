@@ -1,4 +1,4 @@
-package fr.kata.delivery.main;
+package fr.kata.delivery;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
