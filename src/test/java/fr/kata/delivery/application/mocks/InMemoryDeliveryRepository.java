@@ -1,4 +1,4 @@
-package fr.kata.delivery.adapters.persistence;
+package fr.kata.delivery.application.mocks;
 
 import fr.kata.delivery.application.DeliveryRepository;
 import fr.kata.delivery.domain.Delivery;
