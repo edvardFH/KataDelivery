@@ -1,7 +1,9 @@
 package fr.kata.delivery.adapters.controllers;
 
 import fr.kata.delivery.domain.Delivery;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(name = "DeliveryResponse")
 public record DeliveryResponse(
         String id,
         String customerId,

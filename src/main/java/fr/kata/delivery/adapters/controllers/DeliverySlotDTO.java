@@ -7,10 +7,12 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import fr.kata.delivery.domain.DeliverySlot;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
+@Schema(name = "DeliverySlot")
 public record DeliverySlotDTO(
         @JsonProperty("start")
         @NotNull
