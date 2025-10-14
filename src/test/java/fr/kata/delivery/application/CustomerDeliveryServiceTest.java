@@ -1,5 +1,9 @@
 package fr.kata.delivery.application;
 
+import fr.kata.delivery.application.exceptions.BusinessRuleViolationException;
+import fr.kata.delivery.application.exceptions.EntityNotFoundException;
+import fr.kata.delivery.application.exceptions.OperationNotAllowedException;
+import fr.kata.delivery.application.exceptions.UseCaseException;
 import fr.kata.delivery.application.mocks.InMemoryDeliveryRepository;
 import fr.kata.delivery.domain.Address;
 import fr.kata.delivery.domain.CustomerId;
@@ -7,7 +11,6 @@ import fr.kata.delivery.domain.Delivery;
 import fr.kata.delivery.domain.DeliveryId;
 import fr.kata.delivery.domain.DeliverySlot;
 import fr.kata.delivery.domain.DeliveryState;
-import fr.kata.delivery.domain.DomainException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -81,12 +84,12 @@ class CustomerDeliveryServiceTest {
 
     @Test
     void updateDeliveryDetailsThrowsWhenNotOwned() {
-        assertThrows(UseCaseException.class, () -> service.updateDeliveryDetails(deliveryId, otherId, newAddress, newSlot));
+        assertThrows(OperationNotAllowedException.class, () -> service.updateDeliveryDetails(deliveryId, otherId, newAddress, newSlot));
     }
 
     @Test
     void updateDeliveryDetailsThrowsWhenNotFound() {
-        assertThrows(UseCaseException.class, () -> service.updateDeliveryDetails(unkownDeliveryId, ownerId, newAddress, newSlot));
+        assertThrows(EntityNotFoundException.class, () -> service.updateDeliveryDetails(unkownDeliveryId, ownerId, newAddress, newSlot));
     }
 
     @Test
@@ -94,13 +97,13 @@ class CustomerDeliveryServiceTest {
         Delivery current = repository.findById(deliveryId).orElseThrow();
         repository.save(current.withState(DeliveryState.READY));
 
-        assertThrows(DomainException.class, () -> service.updateDeliveryDetails(deliveryId, ownerId, newAddress, newSlot));
+        assertThrows(BusinessRuleViolationException.class, () -> service.updateDeliveryDetails(deliveryId, ownerId, newAddress, newSlot));
     }
 
     @Test
     void updateDeliveryDetailsThrowsWhenAnyDetailIsNull() {
-        assertThrows(DomainException.class, () -> service.updateDeliveryDetails(deliveryId, ownerId, null, newSlot));
-        assertThrows(DomainException.class, () -> service.updateDeliveryDetails(deliveryId, ownerId, newAddress, null));
-        assertThrows(DomainException.class, () -> service.updateDeliveryDetails(deliveryId, ownerId, null, null));
+        assertThrows(BusinessRuleViolationException.class, () -> service.updateDeliveryDetails(deliveryId, ownerId, null, newSlot));
+        assertThrows(BusinessRuleViolationException.class, () -> service.updateDeliveryDetails(deliveryId, ownerId, newAddress, null));
+        assertThrows(BusinessRuleViolationException.class, () -> service.updateDeliveryDetails(deliveryId, ownerId, null, null));
     }
 }

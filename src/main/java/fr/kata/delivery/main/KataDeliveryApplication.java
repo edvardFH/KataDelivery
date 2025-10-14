@@ -1,4 +1,4 @@
-package fr.kata.delivery.katadelivery;
+package fr.kata.delivery.main;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
