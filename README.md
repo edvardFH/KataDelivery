@@ -2,7 +2,9 @@
 
 ![Java](https://img.shields.io/badge/Java-21-orange) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3-green) ![Maven](https://img.shields.io/badge/Maven-3.9-red) ![H2](https://img.shields.io/badge/H2-in--memory-blue)
 
-A Spring Boot REST API built as a **time-constrained coding challenge (< half a day)**. Demonstrates Clean Architecture (Onion pattern) applied to a delivery tracking domain: framework-free domain, isolated use cases, and HTTP semantics driven by exception hierarchy.
+A Spring Boot REST API built as a **time-constrained coding challenge (< half a day)**. Demonstrates Clean
+Architecture (Onion pattern) applied to a delivery tracking domain: framework-free domain, isolated use cases, and HTTP
+semantics driven by exception hierarchy.
 
 ---
 
@@ -36,21 +38,21 @@ flowchart TD
         EX[UseCaseException hierarchy]
     end
 
-    subgraph DOMAIN["DOMAIN (fr.kata.delivery.domain)"]
-        AGG[Delivery aggregate]
-        VO[Address · DeliverySlot · DeliveryId]
-        SM[DeliveryState machine]
-    end
+subgraph DOMAIN["DOMAIN (fr.kata.delivery.domain)"]
+AGG[Delivery aggregate]
+VO[Address · DeliverySlot · DeliveryId]
+SM[DeliveryState machine]
+end
 
-    HTTP --> C
-    C --> SVC
-    SVC --> REPO
-    SVC --> AGG
-    REPO -.->|implemented by| P
+HTTP --> C
+C --> SVC
+SVC --> REPO
+SVC --> AGG
+REPO -.->|implemented by|P
 
-    style ADAPTER fill:#dbeafe,stroke:#3b82f6
-    style APPLICATION fill:#dcfce7,stroke:#22c55e
-    style DOMAIN fill:#fef9c3,stroke:#eab308
+style ADAPTER fill: #dbeafe, stroke: #3b82f6
+style APPLICATION fill: #dcfce7, stroke: #22c55e
+style DOMAIN fill: #fef9c3, stroke: #eab308
 ```
 
 Each layer depends only inward. The domain has no knowledge of Spring, JPA, or HTTP.
@@ -60,14 +62,14 @@ Replacing H2 with PostgreSQL, or swapping REST for a message consumer, requires 
 
 ## Clean Architecture: Layer Independence
 
-| Layer | Package | Responsibility |
-|---|---|---|
-| ADAPTER | `adapters/controllers` | REST endpoints, DTO mapping, exception → HTTP |
-| ADAPTER | `adapters/persistence` | JPA entities, `DeliveryJpaMapper`, `JpaDeliveryRepository` |
-| APPLICATION | `application` | `CustomerDeliveryService`: owns use-case logic and ownership checks |
-| APPLICATION | `application` | `DeliveryRepository`: port interface; never touches JPA |
-| DOMAIN | `domain` | Aggregate root, Value Objects, state machine, `DomainException` |
-| CONFIG | `config` | `ApplicationConfig`: Spring bean wiring only |
+| Layer       | Package                | Responsibility                                                      |
+|-------------|------------------------|---------------------------------------------------------------------|
+| ADAPTER     | `adapters/controllers` | REST endpoints, DTO mapping, exception → HTTP                       |
+| ADAPTER     | `adapters/persistence` | JPA entities, `DeliveryJpaMapper`, `JpaDeliveryRepository`          |
+| APPLICATION | `application`          | `CustomerDeliveryService`: owns use-case logic and ownership checks |
+| APPLICATION | `application`          | `DeliveryRepository`: port interface; never touches JPA             |
+| DOMAIN      | `domain`               | Aggregate root, Value Objects, state machine, `DomainException`     |
+| CONFIG      | `config`               | `ApplicationConfig`: Spring bean wiring only                        |
 
 **Domain proof: Value Objects validate themselves, zero framework dependency:**
 
@@ -76,7 +78,8 @@ Replacing H2 with PostgreSQL, or swapping REST for a message consumer, requires 
 public record Address(String line1, String line2, String postalCode, String city, String countryCode) {
     public Address {
         if (line1 == null || line1.isBlank()) throw new DomainException("Address.line1 must be provided");
-        if (postalCode == null || postalCode.isBlank()) throw new DomainException("Address.postalCode must be provided");
+        if (postalCode == null || postalCode.isBlank())
+            throw new DomainException("Address.postalCode must be provided");
         // ...
         countryCode = countryCode.trim().toUpperCase();
     }
@@ -92,32 +95,42 @@ public record Address(String line1, String line2, String postalCode, String city
 ### ADR-01: Clean Architecture (Onion pattern)
 
 **Context:** Business logic risked coupling to Spring/JPA annotations if no boundary was enforced.
-**Decision:** Three concentric layers (ADAPTER → APPLICATION → DOMAIN), dependencies inward only. Domain layer imports zero framework classes.
-**Consequence:** Domain and application layers are testable without a Spring context. Infrastructure is swappable without touching business rules.
+**Decision:** Three concentric layers (ADAPTER → APPLICATION → DOMAIN), dependencies inward only. Domain layer imports
+zero framework classes.
+**Consequence:** Domain and application layers are testable without a Spring context. Infrastructure is swappable
+without touching business rules.
 
 ---
 
 ### ADR-02: Manual bean wiring in `config` package
 
-**Context:** Using `@Service` / `@Component` in the application layer would introduce Spring coupling where there should be none.
-**Decision:** `ApplicationConfig` instantiates `CustomerDeliveryService` explicitly and injects the JPA repository adapter.
-**Consequence:** Application and domain layers remain framework-agnostic. The config package is the only place that knows both sides.
+**Context:** Using `@Service` / `@Component` in the application layer would introduce Spring coupling where there should
+be none.
+**Decision:** `ApplicationConfig` instantiates `CustomerDeliveryService` explicitly and injects the JPA repository
+adapter.
+**Consequence:** Application and domain layers remain framework-agnostic. The config package is the only place that
+knows both sides.
 
 ---
 
 ### ADR-03: Domain self-validation via canonical constructors
 
 **Context:** Canonical constructors on `record` types run on every instantiation (no risk of bypassing validation).
-**Decision:** All Value Objects (`Address`, `DeliverySlot`, `DeliveryId`, `CustomerId`) throw `DomainException` directly in their canonical constructors.
-**Consequence:** Invalid domain objects cannot be created. `CustomerDeliveryService` catches `DomainException` and re-throws as `BusinessRuleViolationException` (409) to preserve layer boundaries.
+**Decision:** All Value Objects (`Address`, `DeliverySlot`, `DeliveryId`, `CustomerId`) throw `DomainException` directly
+in their canonical constructors.
+**Consequence:** Invalid domain objects cannot be created. `CustomerDeliveryService` catches `DomainException` and
+re-throws as `BusinessRuleViolationException` (409) to preserve layer boundaries.
 
 ---
 
 ### ADR-04: Exception hierarchy mapped to HTTP semantics
 
-**Context:** Domain and use-case failures must surface as correct HTTP status codes without leaking framework concerns into the application layer.
-**Decision:** `UseCaseException` hierarchy: `EntityNotFoundException` (404), `OperationNotAllowedException` (403), `BusinessRuleViolationException` (409). `GlobalExceptionHandler` maps each subtype to its HTTP code.
-**Consequence:** HTTP semantics are decided once, in the adapter layer. Application layer throws business-meaningful exceptions; HTTP codes are not its concern.
+**Context:** Domain and use-case failures must surface as correct HTTP status codes without leaking framework concerns
+into the application layer.
+**Decision:** `UseCaseException` hierarchy: `EntityNotFoundException` (404), `OperationNotAllowedException` (403),
+`BusinessRuleViolationException` (409). `GlobalExceptionHandler` maps each subtype to its HTTP code.
+**Consequence:** HTTP semantics are decided once, in the adapter layer. Application layer throws business-meaningful
+exceptions; HTTP codes are not its concern.
 
 ---
 
@@ -139,14 +152,14 @@ All endpoints require an `X-Customer-Id` header (missing header → 401).
 
 ## Tech Stack
 
-| Concern | Technology |
-|---|---|
-| Language | Java 21 |
-| Framework | Spring Boot 3 |
-| Build | Maven 3.9 |
-| Database | H2 (in-memory) |
-| ORM | Spring Data JPA + `@Version` optimistic locking |
-| API docs | OpenAPI / Swagger UI |
+| Concern   | Technology                                      |
+|-----------|-------------------------------------------------|
+| Language  | Java 21                                         |
+| Framework | Spring Boot 3                                   |
+| Build     | Maven 3.9                                       |
+| Database  | H2 (in-memory)                                  |
+| ORM       | Spring Data JPA + `@Version` optimistic locking |
+| API docs  | OpenAPI / Swagger UI                            |
 
 ---
 
