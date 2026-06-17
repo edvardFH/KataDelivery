@@ -173,7 +173,7 @@ mvn test
 
 ## API
 
-Interactive documentation: [Swagger UI](http://localhost:8080/swagger-ui/index.html)
+Interactive documentation: [Swagger UI](http://localhost:8080/swagger-ui/index.html) *(requires a local running instance)*
 
 - `GET  /api/v1/deliveries/{deliveryId}` — view delivery state and details
 - `PATCH /api/v1/deliveries/{deliveryId}` — update address and time slot (`ACCEPTED` state only)
