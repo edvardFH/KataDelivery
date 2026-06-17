@@ -170,3 +170,12 @@ mvn test
 - `domain/`: pure unit tests, no Spring context
 - `application/`: `InMemoryDeliveryRepository` stub, no Spring context
 - `KataDeliveryApplicationTests`: Spring Boot context smoke test
+
+## API
+
+Interactive documentation: [Swagger UI](http://localhost:8080/swagger-ui/index.html)
+
+- `GET  /api/v1/deliveries/{deliveryId}` — view delivery state and details
+- `PATCH /api/v1/deliveries/{deliveryId}` — update address and time slot (`ACCEPTED` state only)
+
+All endpoints require `X-Customer-Id` header. Missing header → `401 Unauthorized`.
