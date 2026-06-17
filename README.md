@@ -95,42 +95,40 @@ public record Address(String line1, String line2, String postalCode, String city
 ### ADR-01: Clean Architecture (Onion pattern)
 
 **Context:** Business logic risked coupling to Spring/JPA annotations if no boundary was enforced.
-**Decision:** Three concentric layers (ADAPTER → APPLICATION → DOMAIN), dependencies inward only. Domain layer imports
-zero framework classes.
-**Consequence:** Domain and application layers are testable without a Spring context. Infrastructure is swappable
-without touching business rules.
+
+**Decision:** Three concentric layers (ADAPTER → APPLICATION → DOMAIN), dependencies inward only. Domain layer imports zero framework classes.
+
+**Consequence:** Domain and application layers are testable without a Spring context. Infrastructure is swappable without touching business rules.
 
 ---
 
 ### ADR-02: Manual bean wiring in `config` package
 
-**Context:** Using `@Service` / `@Component` in the application layer would introduce Spring coupling where there should
-be none.
-**Decision:** `ApplicationConfig` instantiates `CustomerDeliveryService` explicitly and injects the JPA repository
-adapter.
-**Consequence:** Application and domain layers remain framework-agnostic. The config package is the only place that
-knows both sides.
+**Context:** Using `@Service` / `@Component` in the application layer would introduce Spring coupling where there should be none.
+
+**Decision:** `ApplicationConfig` instantiates `CustomerDeliveryService` explicitly and injects the JPA repository adapter.
+
+**Consequence:** Application and domain layers remain framework-agnostic. The config package is the only place that knows both sides.
 
 ---
 
 ### ADR-03: Domain self-validation via canonical constructors
 
 **Context:** Canonical constructors on `record` types run on every instantiation (no risk of bypassing validation).
-**Decision:** All Value Objects (`Address`, `DeliverySlot`, `DeliveryId`, `CustomerId`) throw `DomainException` directly
-in their canonical constructors.
-**Consequence:** Invalid domain objects cannot be created. `CustomerDeliveryService` catches `DomainException` and
-re-throws as `BusinessRuleViolationException` (409) to preserve layer boundaries.
+
+**Decision:** All Value Objects (`Address`, `DeliverySlot`, `DeliveryId`, `CustomerId`) throw `DomainException` directly in their canonical constructors.
+
+**Consequence:** Invalid domain objects cannot be created. `CustomerDeliveryService` catches `DomainException` and re-throws as `BusinessRuleViolationException` (409) to preserve layer boundaries.
 
 ---
 
 ### ADR-04: Exception hierarchy mapped to HTTP semantics
 
-**Context:** Domain and use-case failures must surface as correct HTTP status codes without leaking framework concerns
-into the application layer.
-**Decision:** `UseCaseException` hierarchy: `EntityNotFoundException` (404), `OperationNotAllowedException` (403),
-`BusinessRuleViolationException` (409). `GlobalExceptionHandler` maps each subtype to its HTTP code.
-**Consequence:** HTTP semantics are decided once, in the adapter layer. Application layer throws business-meaningful
-exceptions; HTTP codes are not its concern.
+**Context:** Domain and use-case failures must surface as correct HTTP status codes without leaking framework concerns into the application layer.
+
+**Decision:** `UseCaseException` hierarchy: `EntityNotFoundException` (404), `OperationNotAllowedException` (403), `BusinessRuleViolationException` (409). `GlobalExceptionHandler` maps each subtype to its HTTP code.
+
+**Consequence:** HTTP semantics are decided once, in the adapter layer. Application layer throws business-meaningful exceptions; HTTP codes are not its concern.
 
 ---
 
