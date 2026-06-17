@@ -171,6 +171,8 @@ mvn test
 - `application/`: `InMemoryDeliveryRepository` stub, no Spring context
 - `KataDeliveryApplicationTests`: Spring Boot context smoke test
 
+---
+
 ## API
 
 Interactive documentation: [Swagger UI](http://localhost:8080/swagger-ui/index.html) *(requires a local running instance)*
