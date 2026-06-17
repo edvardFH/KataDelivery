@@ -172,9 +172,3 @@ mvn test
 - `domain/`: pure unit tests, no Spring context
 - `application/`: `InMemoryDeliveryRepository` stub, no Spring context
 - `KataDeliveryApplicationTests`: Spring Boot context smoke test
-
----
-
-## Author
-
-**Alex DA SILVA**
